@@ -161,11 +161,21 @@ stopifnot(m_fpkm_dt$entrezID %in% toplot_dt$entrezID)
 
 toplot_dt <- merge(m_fpkm_dt, toplot_dt, merge="entrezID", all.x=TRUE, all.y=FALSE)
 stopifnot(!is.na(toplot_dt))
-toplot_dt$cond_a <- ifelse(toplot_dt$variable %in% samp1, cond1, 
-                         ifelse(toplot_dt$variable %in% samp2, cond2, "other" ))
+toplot_dt$cond_a <- ifelse(toplot_dt$variable %in% samp1, cond1,
+                           ifelse(toplot_dt$variable %in% samp2, cond2, "other" ))
 toplot_dt$cond_b <- ifelse(toplot_dt$variable %in% mutSamples, "NFE2L2_KEAP1_mut",  "NFE2L2_KEAP1_wt")
 
 toplot_dt$cond <- interaction(toplot_dt$cond_a, toplot_dt$cond_b)
+
+check_dt <- toplot_dt[,c("cond_a", "cond_b", "cond","variable")]
+check_dt <- unique(check_dt)
+
+cat("table(check_dt$cond_a)\n")
+table(check_dt$cond_a)
+cat("table(check_dt$cond_b)\n")
+table(check_dt$cond_b)
+cat("table(check_dt$cond)\n")
+table(check_dt$cond)
 
 all_conds <- c("other.NFE2L2_KEAP1_wt", "other.NFE2L2_KEAP1_mut", "mutKRAS.NFE2L2_KEAP1_wt",   "mutKRAS.NFE2L2_KEAP1_mut", "mutEGFR.NFE2L2_KEAP1_wt", "mutEGFR.NFE2L2_KEAP1_mut")
 
@@ -207,34 +217,48 @@ withRank_toplot_dt2$symbol <- factor(withRank_toplot_dt2$symbol, levels=tmp$symb
 withRank_toplot_dt2$cond <- factor(withRank_toplot_dt2$cond, levels = all_conds)
 stopifnot(!is.na(withRank_toplot_dt2$cond))
 
+cond_labels <- paste0(all_conds, " (" , table(withRank_toplot_dt2$cond) [all_conds], ")")
+
 withRank_toplot_dt2$symbol_lab <- paste0(withRank_toplot_dt2$symbol, "\n(rank: ", withRank_toplot_dt2$gene_rank, ")")
 withRank_toplot_dt2$symbol_lab <- factor(withRank_toplot_dt2$symbol_lab, levels=tmp$lab)
 stopifnot(!is.na(withRank_toplot_dt2$symbol_lab))
 
 save(withRank_toplot_dt2, file ="withRank_toplot_dt2.Rdata")
 
+cat(paste0(length(samp1), " \n"))
+cat(paste0(length(samp2), " \n"))
+
+check_dt <- withRank_toplot_dt2[,c("variable",  "cond")]
+check_dt <- unique(check_dt)
+cat("table(check_dt$cond)\n")
+table(check_dt$cond)
+
+
+stopifnot(sum(table(check_dt$cond) [grepl(cond1, names(table(check_dt$cond)))]) == length(samp1))
+stopifnot(sum(table(check_dt$cond) [grepl(cond2, names(table(check_dt$cond)))]) == length(samp2))
+
 subTit <- paste0(tad_to_plot, " (rank: ", tad_plot_rank, ")")
 
-p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log10, fill = cond)) + 
+p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log10, fill = cond)) +
   # geom_boxplot(notch = TRUE, outlier.shape=NA)+
   # geom_jitter(aes(colour = cond), position=position_jitterdodge())+
   geom_boxplot(notch = TRUE, outlier.shape=NA)+
   geom_point(aes(color=cond), position=position_jitterdodge(),  alpha=0.5) +
   
   
- 
+  
   ggtitle(paste0(hicds, " - ", exprds), subtitle = paste0(subTit))+
   scale_x_discrete(name=my_xlab)+
   scale_y_continuous(name=paste0(my_ylab),
                      breaks = scales::pretty_breaks(n = 20))+
   
-  scale_colour_brewer(palette="Paired")+
-  scale_fill_brewer(palette="Paired")+
+  scale_colour_brewer(palette="Paired", labels=cond_labels)+
+  scale_fill_brewer(palette="Paired", labels=cond_labels)+
   # scale_color_manual(values=c(col1, col2))+
   # scale_fill_manual(values=c(col1, col2))+
-
+  
   labs(fill  = paste0("Cond."), color=paste0("Cond.")) +
-  theme( 
+  theme(
     plot.title = element_text(hjust = 0.5, face = "bold", size=16),
     plot.subtitle = element_text(hjust = 0.5, face = "italic", size = 14),
     panel.grid = element_blank(),
@@ -267,4 +291,6 @@ cat(paste0("... written: ", outFile, "\n"))
 cat("***** DONE: ", script_name, "\n")
 
 cat(paste0(startTime, "\n", Sys.time(), "\n"))
+
+
 

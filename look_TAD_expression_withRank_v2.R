@@ -143,6 +143,15 @@ toplot_dt <- merge(m_fpkm_dt, toplot_dt, merge="entrezID", all.x=TRUE, all.y=FAL
 stopifnot(!is.na(toplot_dt))
 toplot_dt$cond <- ifelse(toplot_dt$variable %in% samp1, cond1, 
                          ifelse(toplot_dt$variable %in% samp2, cond2, NA ))
+
+check_dt <- toplot_dt[,c("variable", "cond")]
+cat("table(check_dt$cond)\n")
+table(check_dt$cond)
+
+cat(paste0(length(samp1), "\n"))
+cat(paste0(length(samp2), "\n"))
+
+
 stopifnot(!is.na(toplot_dt$cond))
 toplot_dt$symbol <- entrez2symb[paste0(toplot_dt$entrezID)]
 stopifnot(!is.na(toplot_dt$symbol))
@@ -186,6 +195,18 @@ stopifnot(!is.na(withRank_toplot_dt2$symbol_lab))
 save(withRank_toplot_dt2, file ="withRank_toplot_dt2.Rdata")
 
 subTit <- paste0(tad_to_plot, " (rank: ", tad_plot_rank, ")")
+
+
+cat("table(withRank_toplot_dt2$cond)\n")
+table(withRank_toplot_dt2$cond)
+
+
+check_dt <- withRank_toplot_dt2[,c("cond", "variable")]
+check_dt <- unique(check_dt)
+stopifnot(sum(table(check_dt$cond) [grepl(cond1, names(table(check_dt$cond)))]) == length(samp1))
+
+
+
 
 p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log10, fill = cond)) + 
   # geom_boxplot(notch = TRUE, outlier.shape=NA)+

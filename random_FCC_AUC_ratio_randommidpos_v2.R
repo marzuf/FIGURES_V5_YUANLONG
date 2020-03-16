@@ -147,7 +147,7 @@ for(rd in all_rd){
       hicds_dt
     }
 
-  save(all_auc_ratio_dt,file = "all_auc_ratio_dt.Rdata", version=2)
+  save(all_auc_ratio_dt,file = paste0("all_auc_ratio_dt_", rd, ".Rdata"), version=2)
   cat(paste0("... written all_auc_ratio_dt.Rdata\n"))
   
   plot_dt <- merge(fcc_auc_dt, all_auc_ratio_dt, by =c("hicds", "exprds"), all.x=TRUE, all.y=TRUE)

@@ -109,9 +109,11 @@ points(
 )
 
 
+abline(lm(nSignif_dt$nSignifTADs~c(1:nrow(nSignif_dt))), col = tad_signif_col, lty=2)
+
 legend("topleft",
-       legend=c(paste0("gene signif.: p-val <= ", geneSignifThresh),
-                paste0("TAD signif.: p-val <= ", tadSignifThresh)),
+       legend=c(paste0("gene signif.: adj. p-val <= ", geneSignifThresh),
+                paste0("TAD signif.: adj. p-val <= ", tadSignifThresh)),
        bty="n")
 
 
@@ -138,6 +140,7 @@ plot(
 axis(side=4, col = gene_signif_col, col.ticks = gene_signif_col, col.axis=gene_signif_col, at = seq(from=0, to=maxGenes, by=1000))
 mtext(side = 4, line = 3, '# signif. genes', col=gene_signif_col,  cex=plotCex)
 
+abline(lm(nSignif_dt$nSignifGenes~c(1:nrow(nSignif_dt))), col = gene_signif_col, lty=2)
 
 
 legend("bottom", 
@@ -178,7 +181,103 @@ foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
 
+outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withNbrSamp_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2.5))
+par(mar = c(5,5,2,5))
+replayPlot(signifPlot) 
+mtext(side=1, col = labcols, text = paste0(nSignif_dt$sumSample, " ", labsymbol), at= 1:nrow(nSignif_dt),  las=2,cex = 0.9, line = 0)
+foo <- dev.off()
+cat(paste0("... written: ", outFile, "\n"))
+
+dotcols <- all_cols[all_cmps[nSignif_dt$exprds]]
+
+outFile <- file.path(outFolder, paste0("nSignifGenes_vs_nSignifTADs_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+do.call(plotType, list(outFile, height=myHeight, width=myWidth))
+par(bty="L")
+plot(
+  x = nSignif_dt$nSignifTADs,
+  y = nSignif_dt$nSignifGenes,
+  col = dotcols,
+  ylab = "# signif. genes",
+  xlab = "# signif. TADs",
+  pch=16,
+cex=0.7,
+	main = paste0("# signif. features"),
+  cex.axis=plotCex,
+  cex.main = plotCex,
+  cex.lab = plotCex
+)
+mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh, " - TAD adj. p-val <= ", tadSignifThresh))
+addCorr(x=nSignif_dt$nSignifTADs,y=nSignif_dt$nSignifGenes,bty="n")
+#legend("bottomleft", 
+#       # legend = paste0(labsymbol, " ", names(all_cols)),
+#       legend = paste0(names(all_cols)),
+#       col=all_cols,
+#       pch=16,
+#       cex = plotCex,
+# bty="n"
+#)
+foo <- dev.off()
+cat(paste0("... written: ", outFile, "\n"))
 
 
+outFile <- file.path(outFolder, paste0("nSignifGenes_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+do.call(plotType, list(outFile, height=myHeight, width=myWidth))
+par(bty="L")
+plot(
+  x = nSignif_dt$sumSample,
+  y = nSignif_dt$nSignifGenes,
+  col = dotcols,
+  ylab = "# signif. genes",
+  xlab = "Sum # of samples",
+  pch=16,
+cex=0.7,
+	main = paste0("# signif. genes vs. sample size"),
+  cex.axis=plotCex,
+  cex.main = plotCex,
+  cex.lab = plotCex
+)
+mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh))
+addCorr(x=nSignif_dt$sumSample,y=nSignif_dt$nSignifGenes,bty="n")
+#legend("bottomleft", 
+#       # legend = paste0(labsymbol, " ", names(all_cols)),
+#       legend = paste0(names(all_cols)),
+#       col=all_cols,
+#       pch=16,
+#       cex = plotCex,
+# bty="n"
+#)
+foo <- dev.off()
+cat(paste0("... written: ", outFile, "\n"))
+
+
+outFile <- file.path(outFolder, paste0("nSignifTADs_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+do.call(plotType, list(outFile, height=myHeight, width=myWidth))
+par(bty="L")
+plot(
+  x = nSignif_dt$sumSample,
+  y = nSignif_dt$nSignifTADs,
+  col = dotcols,
+  ylab = "# signif. TADs",
+  xlab = "Sum # of samples",
+  pch=16,
+cex=0.7,
+	main = paste0("# signif. TADs vs. sample size"),
+  cex.axis=plotCex,
+  cex.main = plotCex,
+  cex.lab = plotCex
+)
+mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; TAD adj. p-val <= ", tadSignifThresh))
+addCorr(x=nSignif_dt$sumSample,y=nSignif_dt$nSignifGenes,bty="n")
+#legend("bottomleft", 
+#       # legend = paste0(labsymbol, " ", names(all_cols)),
+#       legend = paste0(names(all_cols)),
+#       col=all_cols,
+#       pch=16,
+#       cex = plotCex,
+# bty="n"
+#)
+foo <- dev.off()
+cat(paste0("... written: ", outFile, "\n"))
 
 

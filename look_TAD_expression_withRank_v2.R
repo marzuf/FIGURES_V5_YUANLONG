@@ -59,7 +59,7 @@ stopifnot(length(tad_plot_rank) == 1)
 plotSub <- paste0(tad_to_plot, " - rank: ", tad_plot_rank)
 
 my_xlab <- "TAD genes (ordered by start positions)"
-my_ylab <- "RNA-seq FPKM [log10]"
+my_ylab <- "RNA-seq TPM [log10]"
 
 plotType <- "svg"
 myHeight <- ifelse(plotType=="png", 500, 7)
@@ -165,9 +165,10 @@ toplot_dt$value_log10 <- log10(toplot_dt$value + log10_offset)
 #   dt
 # }))
 
+all_conds <- c(cond1, cond2)
 
 withRank_toplot_dt2 <- do.call(rbind, by(toplot_dt, list(toplot_dt$symbol), function(x) {
-  x$cond <- factor(x$cond, levels=c(cond1,cond2))
+  x$cond <- factor(x$cond, levels=all_conds)
   dt <- x[order(-as.numeric(x$cond), x$value, decreasing = TRUE),]
   dt$samp_rank <- 1:nrow(dt)
   dt
@@ -205,7 +206,10 @@ check_dt <- withRank_toplot_dt2[,c("cond", "variable")]
 check_dt <- unique(check_dt)
 stopifnot(sum(table(check_dt$cond) [grepl(cond1, names(table(check_dt$cond)))]) == length(samp1))
 
+stopifnot(sum(table(check_dt$cond) [grepl(cond1, names(table(check_dt$cond)))]) == length(samp1))
+stopifnot(sum(table(check_dt$cond) [grepl(cond2, names(table(check_dt$cond)))]) == length(samp2))
 
+cond_labels <- paste0(all_conds, " (n=" , table(check_dt$cond) [all_conds], ")")
 
 
 p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log10, fill = cond)) + 
@@ -221,8 +225,8 @@ p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log1
   scale_y_continuous(name=paste0(my_ylab),
                      breaks = scales::pretty_breaks(n = 20))+
   
-  scale_color_manual(values=c(col1, col2))+
-  scale_fill_manual(values=c(col1, col2))+
+  scale_color_manual(values=c(col1, col2), labels=cond_labels)+
+  scale_fill_manual(values=c(col1, col2), labels=cond_labels)+
   
   labs(fill  = paste0("Cond."), color=paste0("Cond.")) +
   theme( 

@@ -21,6 +21,7 @@ require(reshape2)
 log10_offset <- 0.01
 
 # Rscript look_TAD_LUAD_allSamples.R ENCSR489OCU_NCI-H460_40kb TCGAluad_mutKRAS_mutEGFR chr10_TAD16
+# Rscript look_TAD_LUAD_allSamples.R ENCSR489OCU_NCI-H460_40kb TCGAluad_nonsmoker_smoker chr10_TAD16
 
 mutSamples <- get(load("../v2_Yuanlong_Cancer_HiC_data_TAD_DA/NFE2L2_KEAP1_MUTSAMPLES/mut_samples.Rdata"))
 
@@ -177,7 +178,8 @@ table(check_dt$cond_b)
 cat("table(check_dt$cond)\n")
 table(check_dt$cond)
 
-all_conds <- c("other.NFE2L2_KEAP1_wt", "other.NFE2L2_KEAP1_mut", "mutKRAS.NFE2L2_KEAP1_wt",   "mutKRAS.NFE2L2_KEAP1_mut", "mutEGFR.NFE2L2_KEAP1_wt", "mutEGFR.NFE2L2_KEAP1_mut")
+all_conds <- c("other.NFE2L2_KEAP1_wt", "other.NFE2L2_KEAP1_mut", paste0(cond1, ".NFE2L2_KEAP1_wt"),   paste0(cond1, ".NFE2L2_KEAP1_mut"), 
+			paste0(cond2, ".NFE2L2_KEAP1_wt"), paste0(cond2, ".NFE2L2_KEAP1_mut"))
 
 stopifnot(!is.na(toplot_dt$cond))
 toplot_dt$symbol <- entrez2symb[paste0(toplot_dt$entrezID)]
@@ -217,7 +219,6 @@ withRank_toplot_dt2$symbol <- factor(withRank_toplot_dt2$symbol, levels=tmp$symb
 withRank_toplot_dt2$cond <- factor(withRank_toplot_dt2$cond, levels = all_conds)
 stopifnot(!is.na(withRank_toplot_dt2$cond))
 
-cond_labels <- paste0(all_conds, " (" , table(withRank_toplot_dt2$cond) [all_conds], ")")
 
 withRank_toplot_dt2$symbol_lab <- paste0(withRank_toplot_dt2$symbol, "\n(rank: ", withRank_toplot_dt2$gene_rank, ")")
 withRank_toplot_dt2$symbol_lab <- factor(withRank_toplot_dt2$symbol_lab, levels=tmp$lab)
@@ -233,9 +234,12 @@ check_dt <- unique(check_dt)
 cat("table(check_dt$cond)\n")
 table(check_dt$cond)
 
-
+if(cond1 == "mutKRAS"){
 stopifnot(sum(table(check_dt$cond) [grepl(cond1, names(table(check_dt$cond)))]) == length(samp1))
 stopifnot(sum(table(check_dt$cond) [grepl(cond2, names(table(check_dt$cond)))]) == length(samp2))
+}
+
+cond_labels <- paste0(all_conds, " (n=" , table(check_dt$cond) [all_conds], ")")
 
 subTit <- paste0(tad_to_plot, " (rank: ", tad_plot_rank, ")")
 
@@ -280,7 +284,7 @@ p_var_boxplot <-  ggplot(withRank_toplot_dt2, aes(x = symbol_lab, y = value_log1
   )
 
 outFile <- file.path(outFolder, paste0(hicds, "_", exprds, "_", tad_to_plot, "_allSamples_exprValues_boxplot.", plotType))
-ggsave(plot = p_var_boxplot, filename = outFile, height=myHeightGG, width = myWidthGG*1.4)
+ggsave(plot = p_var_boxplot, filename = outFile, height=myHeightGG, width = myWidthGG*1.8)
 cat(paste0("... written: ", outFile, "\n"))
 
 

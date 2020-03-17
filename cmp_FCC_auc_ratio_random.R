@@ -9,7 +9,11 @@ myHeight <- myWidth <- 7
 plotCex <- 1.4
 
 source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
+source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
+source("../FIGURES_V2_YUANLONG/settings.R")
 
+auc_randommidposstrict_dt <- get(load("RANDOM_FCC_AUC_RATIO_RANDOMMIDPOS_V2/all_auc_ratio_dt_RANDOMMIDPOSSTRICT.Rdata"))
+colnames(auc_randommidposstrict_dt)[colnames(auc_randommidposstrict_dt) == "rd_fcc_auc"] <- "RANDOMMIDPOSSTRICT_FCC_AUC"
 auc_randommidposdisc_dt <- get(load("RANDOM_FCC_AUC_RATIO_RANDOMMIDPOS_V2/all_auc_ratio_dt_RANDOMMIDPOSDISC.Rdata"))
 colnames(auc_randommidposdisc_dt)[colnames(auc_randommidposdisc_dt) == "rd_fcc_auc"] <- "RANDOMMIDPOSDISC_FCC_AUC"
 auc_randommidpos_dt <- get(load("RANDOM_FCC_AUC_RATIO_RANDOMMIDPOS_V2/all_auc_ratio_dt_RANDOMMIDPOS.Rdata"))
@@ -25,9 +29,14 @@ auc_meanCorrPermut_dt <- data.frame(
 )
 
 plot_dt <- merge(auc_meanCorrPermut_dt, 
-                 merge(auc_randommidposdisc_dt, auc_randommidpos_dt, by = c("hicds", "exprds"), all=TRUE),  by = c("hicds", "exprds"), all=TRUE)
+                 merge( auc_randommidposstrict_dt, 
+						merge(auc_randommidposdisc_dt, auc_randommidpos_dt, 
+								by = c("hicds", "exprds"), all=TRUE),  by = c("hicds", "exprds"), all=TRUE),   by = c("hicds", "exprds"), all=TRUE)
+
 
 stopifnot(!is.na(plot_dt))
+
+dotcols <- all_cols[all_cmps[plot_dt$exprds]]
 
 for(r1 in 3:(ncol(plot_dt)-1)) {
  
@@ -51,6 +60,7 @@ for(r1 in 3:(ncol(plot_dt)-1)) {
       main=paste0("CMP FCC AUC ratio"),
       pch=16,
       cex=0.7,
+col = dotcols,
       cex.lab=plotCex,
       cex.main=plotCex,
       cex.axis=plotCex
@@ -63,6 +73,14 @@ for(r1 in 3:(ncol(plot_dt)-1)) {
       legPos="topleft",
       bty="n"
     )
+legend("topright", 
+       # legend = paste0(labsymbol, " ", names(all_cols)),
+       legend = paste0(names(all_cols)),
+       col=all_cols,
+       pch=16,
+#       cex = plotCex,
+ bty="n"
+)
     
     
     foo <- dev.off()

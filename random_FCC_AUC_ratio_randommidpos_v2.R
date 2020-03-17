@@ -56,8 +56,8 @@ all_hicds <- list.files(file.path(permutFolder))
 all_hicds <- all_hicds[! (grepl("RANDOM", all_hicds) | grepl("PERMUT", all_hicds))]
 all_exprds <- sapply(all_hicds, function(x) list.files(file.path(permutFolder, x)))
 
-all_rd <- c("RANDOMMIDPOS", "RANDOMMIDPOSDISC")
-# all_rd <- c("RANDOMMIDPOS")
+all_rd <- c("RANDOMMIDPOS", "RANDOMMIDPOSDISC", "RANDOMMIDPOSSTRICT")
+# all_rd <- c("RANDOMMIDPOSSTRICT")
 
 rd = all_rd [1]
 for(rd in all_rd){
@@ -147,12 +147,14 @@ for(rd in all_rd){
       hicds_dt
     }
 
-  save(all_auc_ratio_dt,file = paste0("all_auc_ratio_dt_", rd, ".Rdata"), version=2)
+  save(all_auc_ratio_dt,file = file.path(outFolder, paste0("all_auc_ratio_dt_", rd, ".Rdata")), version=2)
   cat(paste0("... written all_auc_ratio_dt.Rdata\n"))
   
   plot_dt <- merge(fcc_auc_dt, all_auc_ratio_dt, by =c("hicds", "exprds"), all.x=TRUE, all.y=TRUE)
   stopifnot(!is.na(plot_dt))
   
+  dotcols <- all_cols[all_cmps[plot_dt$exprds]]
+
   outFile <- file.path(outFolder, paste0("allDS_FCC_aucratio_obs_vs_", rd,".", plotType))
   do.call(plotType, list(outFile, height=myHeight, width=myHeight))
   par(bty="L")
@@ -162,6 +164,7 @@ for(rd in all_rd){
     xlab = "FCC AUC ratio (observed)",
     ylab = paste0("FCC AUC ratio (", rd, ")"),
     main=paste0("FCC AUC ratio obs-", rd),
+	col = dotcols,
     pch=16,
     cex=0.7,
     cex.lab=plotCex,
@@ -175,6 +178,14 @@ for(rd in all_rd){
     y= plot_dt$rd_fcc_auc,
     bty="n"
   )
+legend("topleft", 
+       # legend = paste0(labsymbol, " ", names(all_cols)),
+       legend = paste0(names(all_cols)),
+       col=all_cols,
+       pch=16,
+#       cex = plotCex,
+ bty="n"
+)
 
   
   foo <- dev.off()

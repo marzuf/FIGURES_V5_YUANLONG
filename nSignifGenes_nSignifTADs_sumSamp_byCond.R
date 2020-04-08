@@ -9,17 +9,20 @@ source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
 source("../FIGURES_V2_YUANLONG/settings.R")
 require(ggsci)
 
-# Rscript nSignifGenes_nSignifTADs_sumSamp.R
+# Rscript nSignifGenes_nSignifTADs_sumSamp_byCond.R
 
-outFolder <- file.path("NSIGNIFGENES_NSIGNIFTADS_SUMSAMP")
+outFolder <- file.path("NSIGNIFGENES_NSIGNIFTADS_SUMSAMP_BYCOND")
 dir.create(outFolder, recursive = TRUE)
+
+outFile_model <- file.path(outFolder, "outFile_model.txt")
+file.remove(outFile_model)
 
 dotpch <- 19
 # segcol <-  "#BEBEBE19"
 segcol <- "grey"
 dotCex <- 1.1
 
-
+setDir <- "/media/electron"
 setDir <- ""
 mainFolder <- file.path("../v2_Yuanlong_Cancer_HiC_data_TAD_DA")
 settingFolder <- file.path(mainFolder, "PIPELINE", "INPUT_FILES")
@@ -60,8 +63,106 @@ nSignif_dt$dataset <- paste0(nSignif_dt$hicds, "\n", nSignif_dt$exprds)
 nSignif_dt <- nSignif_dt[order(nSignif_dt$sumSample),]
 
 
-outFile <- file.path(outFolder, "nSignif_dt_sumSample.Rdata")
-save(nSignif_dt, file = outFile, version=2)
+nSignif_dt$ds_rank <- 1:nrow(nSignif_dt)
+
+nSignif_dt$cond <- all_cmps[nSignif_dt$exprds]
+
+nSignif_dt$labcols <- all_cols[all_cmps[nSignif_dt$exprds]]
+
+
+for(x_var in c("sumSample", "ds_rank")) {
+  for(y_var in c("nSignifGenes", "nSignifTADs")) {
+    
+    m_wt_mut <- lm(as.formula(paste0(y_var, "~", x_var)), data = nSignif_dt[nSignif_dt$cond == "wt_vs_mut",])
+    m_subtypes <- lm(as.formula(paste0(y_var, "~", x_var)), data = nSignif_dt[nSignif_dt$cond == "subtypes",])
+    m_norm_tum <- lm(as.formula(paste0(y_var, "~", x_var)), data = nSignif_dt[nSignif_dt$cond == "norm_vs_tumor",])
+    m_all <- lm(as.formula(paste0(y_var, "~", x_var)), data = nSignif_dt)
+    
+    outFile <- file.path(outFolder, paste0(y_var, "_vs_", x_var, "_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, "_withFit.", plotType))
+    do.call(plotType, list(outFile, height=myHeight, width=myWidth))
+    
+    my_x <- nSignif_dt[,paste0(x_var)]
+    my_y <- nSignif_dt[,paste0(y_var)]
+    par(bty="L")
+    plot(
+      x = my_x,
+      y = my_y,
+      main  = paste0(y_var, "_vs_", x_var),
+      xlab = x_var,
+      ylab=y_var,
+      cex=0.7,
+      pch=16,
+      col=nSignif_dt$labcols,
+      cex.axis=plotCex,
+      cex.lab=plotCex,
+      cex.main=plotCex
+    )
+    if(y_var == "nSignifGenes") {
+      mtext(side=3, text = paste0("all DS (n=", nrow(nSignif_dt), "); gene adj. p-val<=", geneSignifThresh ))  
+    } else if(y_var == "nSignifTADs") {
+      mtext(side=3, text = paste0("all DS (n=", nrow(nSignif_dt), "); TAD adj. p-val_tadSignif", tadSignifThresh))  
+      
+    }
+    
+    
+    
+    abline(m_wt_mut, col = all_cols["wt_vs_mut"], lty=2)
+    abline(m_subtypes, col = all_cols["subtypes"], lty=2)
+    abline(m_norm_tum, col = all_cols["norm_vs_tumor"], lty=2)
+    abline(m_all, col ="black", lty=2)
+    
+    legend(
+      "topleft",
+      legend = c(names(all_cols), "all"),
+      col = c(all_cols, "black"),
+      bty="n",
+      lty=1
+    )
+    
+  }
+}
+
+
+
+m1 <- lm(nSignifTADs ~ ds_rank, data = nSignif_dt)
+m2 <- lm(nSignifGenes ~ ds_rank, data = nSignif_dt)
+m3 <- lm(nSignifTADs ~ ds_rank+cond, data = nSignif_dt)
+m4 <- lm(nSignifGenes ~ ds_rank+cond, data = nSignif_dt)
+
+sink(outFile_model, append=TRUE)
+print("************************** ALL DATASETS\n")
+print(summary(m1))
+print("\n----------------------------------------------------\n")
+print(summary(m2))
+print("\n----------------------------------------------------\n")
+print(summary(m3))
+print("\n----------------------------------------------------\n")
+print(summary(m4))
+sink()
+    
+
+
+init_nSignif_dt <- nSignif_dt
+
+all_conds <- unique(nSignif_dt$cond)
+curr_cond = all_conds[1]
+for(curr_cond in all_conds) {
+
+	
+	nSignif_dt <- init_nSignif_dt[init_nSignif_dt$cond == curr_cond,]
+
+
+	labcols <- nSignif_dt$labcols
+	
+m1 <- lm(nSignifTADs ~ ds_rank, data = nSignif_dt)
+m2 <- lm(nSignifGenes ~ ds_rank, data = nSignif_dt)
+
+sink(outFile_model, append=TRUE)
+print(paste0("************************** ", curr_cond, "\n"))
+print(summary(m1))
+print("\n----------------------------------------------------\n")
+print(summary(m2))
+sink()
 
 
 labcols <- all_cols[all_cmps[nSignif_dt$exprds]]
@@ -72,7 +173,7 @@ maxGenes <- max(ceiling(nSignif_dt$nSignifGenes/1000)*1000)
 nSignif_dt$nSignifTADs_rescaled <- nSignif_dt$nSignifTADs/maxTADs * maxGenes
 nSignif_dt$nSignifGenes_rescaled <- nSignif_dt$nSignifGenes/maxGenes * maxTADs
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withSymb_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withSymb_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2))
 dev.control(displaylist="enable")
 par(bty="U", family=fontFamily)
@@ -166,7 +267,7 @@ signifPlot <- recordPlot()
 invisible(dev.off())
 cat(paste0("... written: ", outFile, "\n"))
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withLeg_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withLeg_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2.5))
 par(mar = c(5,5,2,5))
 replayPlot(signifPlot) 
@@ -177,7 +278,7 @@ cat(paste0("... written: ", outFile, "\n"))
 
 
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withNbrSamp_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withNbrSamp_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2.5))
 par(mar = c(5,5,2,5))
 replayPlot(signifPlot) 
@@ -186,7 +287,7 @@ foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withNbrSamp_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_nSignifTADs_all_ds_withNbrSamp_geneSignif",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight*1.2, width=myWidth*2.5))
 par(mar = c(5,5,2,5))
 replayPlot(signifPlot) 
@@ -196,7 +297,7 @@ cat(paste0("... written: ", outFile, "\n"))
 
 dotcols <- all_cols[all_cmps[nSignif_dt$exprds]]
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_vs_nSignifTADs_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_vs_nSignifTADs_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 par(bty="L")
 plot(
@@ -212,7 +313,7 @@ cex=0.7,
   cex.main = plotCex,
   cex.lab = plotCex
 )
-mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh, " - TAD adj. p-val <= ", tadSignifThresh))
+mtext(side=3, text = paste0(curr_cond, " - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh, " - TAD adj. p-val <= ", tadSignifThresh))
 addCorr(x=nSignif_dt$nSignifTADs,y=nSignif_dt$nSignifGenes,bty="n")
 #legend("bottomleft", 
 #       # legend = paste0(labsymbol, " ", names(all_cols)),
@@ -226,7 +327,7 @@ foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
 
-outFile <- file.path(outFolder, paste0("nSignifGenes_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifGenes_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 par(bty="L")
 plot(
@@ -242,7 +343,7 @@ cex=0.7,
   cex.main = plotCex,
   cex.lab = plotCex
 )
-mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh))
+mtext(side=3, text = paste0(curr_cond, " - n=", nrow(nSignif_dt), "; gene adj. p-val <= ", geneSignifThresh))
 addCorr(x=nSignif_dt$sumSample,y=nSignif_dt$nSignifGenes,bty="n")
 #legend("bottomleft", 
 #       # legend = paste0(labsymbol, " ", names(all_cols)),
@@ -256,7 +357,7 @@ foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
 
 
-outFile <- file.path(outFolder, paste0("nSignifTADs_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, ".", plotType))
+outFile <- file.path(outFolder, paste0("nSignifTADs_vs_sumNbrSample_all_ds_",geneSignifThresh, "_tadSignif", tadSignifThresh, "_", curr_cond, ".", plotType))
 do.call(plotType, list(outFile, height=myHeight, width=myWidth))
 par(bty="L")
 plot(
@@ -272,7 +373,7 @@ cex=0.7,
   cex.main = plotCex,
   cex.lab = plotCex
 )
-mtext(side=3, text = paste0("all DS - n=", nrow(nSignif_dt), "; TAD adj. p-val <= ", tadSignifThresh))
+mtext(side=3, text = paste0(curr_cond, " - n=", nrow(nSignif_dt), "; TAD adj. p-val <= ", tadSignifThresh))
 addCorr(x=nSignif_dt$sumSample,y=nSignif_dt$nSignifGenes,bty="n")
 #legend("bottomleft", 
 #       # legend = paste0(labsymbol, " ", names(all_cols)),
@@ -284,5 +385,12 @@ addCorr(x=nSignif_dt$sumSample,y=nSignif_dt$nSignifGenes,bty="n")
 #)
 foo <- dev.off()
 cat(paste0("... written: ", outFile, "\n"))
+
+
+
+
+}
+cat(paste0("... written: ", outFile_model, "\n"))
+
 
 

@@ -20,6 +20,7 @@ require(ggplot2)
 registerDoMC(40)
 
 plotType <- "png"
+plotType <- "svg"
 myHeight <- 400
 myWidth <- 400
 myHeightGG <- 7
@@ -42,7 +43,7 @@ outFolder <- "FCC_DENSITY_HEATMAP_V2"
 dir.create(outFolder, recursive = TRUE)
 
 all_hicds <- list.files(pipOutFolder)
-
+all_hicds <- all_hicds[!(grepl("RANDOM", all_hicds) | grepl("PERMUT", all_hicds))]
 # all_hicds <- all_hicds[!(grepl("RANDOM", all_hicds) | grepl("PERMUT", all_hicds))]
 # all_hicds <- all_hicds[! (grepl("RANDOM", all_hicds) | grepl("PERMUT", all_hicds)) ]
 # all_hicds <- all_hicds[grepl("ENCSR489OCU_NCI-H460_40kb", all_hicds)]
@@ -209,6 +210,10 @@ for(a_t in all_types) {
   plot_dt$dataset <- factor(plot_dt$dataset, levels=ds_levels)
   stopifnot(!is.na(plot_dt$dataset))
 
+  outFile <- file.path(outFolder, paste0("FCC_score_dist_allDS_", a_t, "_plot_dt.Rdata"))
+  save(plot_dt, file=outFile, version=2)
+  cat(paste0("... written: ", outFile, "\n"))
+
   density_plot <- ggplot(plot_dt, aes(x = dataset, y = density_x, fill = density_y))+
     geom_tile() +
   ggtitle(paste0("FCC score distribution - ", a_t),
@@ -319,4 +324,7 @@ for(a_t in all_types) {
   
 }
 
+#load("FCC_DENSITY_HEATMAP_V2/FCC_score_dist_allDS_OBSERVED_plot_dt.Rdata")
+# by(plot_dt, plot_dt$dataset, function(x) auc(x=x$density_x, y=x$density_y))
+# => all around 1
 

@@ -86,6 +86,8 @@ gff_dt <- gff_dt[order(gff_dt$chromo, gff_dt$start, gff_dt$end, gff_dt$entrezID)
 
 g2t_file <- file.path(mainFolder, hicds, "genes2tad", "all_genes_positions.txt")
 g2t_dt <- read.delim(g2t_file, col.names=c("entrezID", "chromo", "start", "end", "region"), header=FALSE, stringsAsFactors = FALSE)
+g2t_dt$entrezID <- as.character(g2t_dt$entrezID)
+stopifnot(!duplicated(g2t_dt$entrezID))
 
 stopifnot(tad_to_plot %in% g2t_dt$region)
 

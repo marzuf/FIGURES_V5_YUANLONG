@@ -12,6 +12,9 @@ source("../Cancer_HiC_data_TAD_DA/utils_fct.R")
 source("../Yuanlong_Cancer_HiC_data_TAD_DA/subtype_cols.R")
 source("../FIGURES_V2_YUANLONG/settings.R")
 
+auc_permg2t_dt <- get(load("../FIGURES_V3_YUANLONG/BARPLOT_FCC_AUC_RATIO/all_dt.Rdata"))
+colnames(auc_permg2t_dt)[colnames(auc_permg2t_dt) == "fcc_auc"] <- "PERMG2T_FCC_AUC"
+
 auc_randommidposstrict_dt <- get(load("RANDOM_FCC_AUC_RATIO_RANDOMMIDPOS_V2/all_auc_ratio_dt_RANDOMMIDPOSSTRICT.Rdata"))
 colnames(auc_randommidposstrict_dt)[colnames(auc_randommidposstrict_dt) == "rd_fcc_auc"] <- "RANDOMMIDPOSSTRICT_FCC_AUC"
 auc_randommidposdisc_dt <- get(load("RANDOM_FCC_AUC_RATIO_RANDOMMIDPOS_V2/all_auc_ratio_dt_RANDOMMIDPOSDISC.Rdata"))
@@ -24,15 +27,82 @@ auc_meanCorrPermut_data2 <- unlist(lapply(auc_meanCorrPermut_data, function(sub)
 auc_meanCorrPermut_dt <- data.frame(
   hicds = gsub("(.+)\\..+", "\\1", names(auc_meanCorrPermut_data2)),
   exprds = gsub(".+\\.(.+)", "\\1", names(auc_meanCorrPermut_data2)),
-  MEANCORRPERMUT_FCC_AUC = as.numeric(auc_meanCorrPermut_data2),
+  MEANCORRPERMUT_meanRL_FCC_AUC = as.numeric(auc_meanCorrPermut_data2),
   stringsAsFactors = FALSE
 )
 
-plot_dt <- merge(auc_meanCorrPermut_dt, 
-                 merge( auc_randommidposstrict_dt, 
-						merge(auc_randommidposdisc_dt, auc_randommidpos_dt, 
-								by = c("hicds", "exprds"), all=TRUE),  by = c("hicds", "exprds"), all=TRUE),   by = c("hicds", "exprds"), all=TRUE)
+auc_meanCorrPermut_data <- get(load("../FIGURES_V3_YUANLONG/RANDOM_FCC_AUC_RATIO_MEANCORRPERMUT_V3/all_permut_fcc.Rdata"))
+auc_meanCorrPermut_data2 <- unlist(lapply(auc_meanCorrPermut_data, function(sub) lapply(sub, function(x) x[["auc_ratio_rd_meanRL"]])))
+auc_meanCorrPermut_withTAD_dt <- data.frame(
+  hicds = gsub("(.+)\\..+", "\\1", names(auc_meanCorrPermut_data2)),
+  exprds = gsub(".+\\.(.+)", "\\1", names(auc_meanCorrPermut_data2)),
+  MEANCORRPERMUT_meanRL_withTAD_FCC_AUC = as.numeric(auc_meanCorrPermut_data2),
+  stringsAsFactors = FALSE
+)
 
+
+auc_meanCorrPermutRorL_data <- get(load("../FIGURES_V3_YUANLONG/RANDOM_FCC_AUC_RATIO_MEANCORRPERMUT_V2_EITHER/all_permut_fcc.Rdata"))
+auc_meanCorrPermutRorL_data2 <- unlist(lapply(auc_meanCorrPermutRorL_data, function(sub) lapply(sub, function(x) x[["auc_ratio_rd_RorL"]])))
+auc_meanCorrPermutRorL_dt <- data.frame(
+  hicds = gsub("(.+)\\..+", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  exprds = gsub(".+\\.(.+)", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  MEANCORRPERMUT_RorL_FCC_AUC = as.numeric(auc_meanCorrPermutRorL_data2),
+  stringsAsFactors = FALSE
+)
+
+auc_meanCorrPermutRorL_data <- get(load("../FIGURES_V3_YUANLONG/RANDOM_FCC_AUC_RATIO_MEANCORRPERMUT_V3_EITHER/all_permut_fcc.Rdata"))
+auc_meanCorrPermutRorL_data2 <- unlist(lapply(auc_meanCorrPermutRorL_data, function(sub) lapply(sub, function(x) x[["auc_ratio_rd_RorL"]])))
+auc_meanCorrPermutRorL_withTAD_dt <- data.frame(
+  hicds = gsub("(.+)\\..+", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  exprds = gsub(".+\\.(.+)", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  MEANCORRPERMUT_RorL_withTAD_FCC_AUC = as.numeric(auc_meanCorrPermutRorL_data2),
+  stringsAsFactors = FALSE
+)
+
+auc_meanCorrPermutRorL_data <- get(load("../FIGURES_V3_YUANLONG/RANDOM_FCC_AUC_RATIO_MEANCORRPERMUT_V4_EITHER/all_permut_fcc.Rdata"))
+auc_meanCorrPermutRorL_data2 <- unlist(lapply(auc_meanCorrPermutRorL_data, function(sub) lapply(sub, function(x) x[["auc_ratio_rd_RorL"]])))
+auc_meanCorrPermutRorL_replace_dt <- data.frame(
+  hicds = gsub("(.+)\\..+", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  exprds = gsub(".+\\.(.+)", "\\1", names(auc_meanCorrPermutRorL_data2)),
+  MEANCORRPERMUT_RorL_replace_FCC_AUC = as.numeric(auc_meanCorrPermutRorL_data2),
+  stringsAsFactors = FALSE
+)
+
+
+
+auc_onePerm_data <- get(load("../FIGURES_V3_YUANLONG/RANDOM_FCC_AUC_RATIO_ONEPERM/all_permut_fcc.Rdata"))
+auc_onePerm_data2 <- unlist(lapply(auc_onePerm_data, function(sub) lapply(sub, function(x) x[["auc_ratio_rd_onePermut"]])))
+auc_onePerm_dt <- data.frame(
+  hicds = gsub("(.+)\\..+", "\\1", names(auc_onePerm_data2)),
+  exprds = gsub(".+\\.(.+)", "\\1", names(auc_onePerm_data2)),
+  ONEPERMG2T_FCC_AUC = as.numeric(auc_onePerm_data2),
+  stringsAsFactors = FALSE
+)
+
+
+plot_dt <- merge(auc_meanCorrPermut_dt, 
+
+			merge(auc_meanCorrPermut_withTAD_dt,
+			
+			merge(auc_meanCorrPermutRorL_dt, 
+
+			merge(auc_meanCorrPermutRorL_withTAD_dt,
+
+			merge(auc_meanCorrPermutRorL_replace_dt,
+
+merge(auc_permg2t_dt,
+
+                 merge( auc_randommidposstrict_dt, 
+						merge(auc_randommidposdisc_dt, 
+
+merge(auc_onePerm_dt,auc_randommidpos_dt, 
+
+								by = c("hicds", "exprds"), all=TRUE),  by = c("hicds", "exprds"), all=TRUE),  
+by = c("hicds", "exprds"), all=TRUE) , by = c("hicds", "exprds"), all=TRUE) , by = c("hicds", "exprds"), all=TRUE) , 
+								 by = c("hicds", "exprds"), all=TRUE) , by = c("hicds", "exprds"), all=TRUE),by = c("hicds", "exprds"), all=TRUE), by = c("hicds", "exprds"), all=TRUE)
+
+outFile <- file.path(outFolder, "plot_dt.Rdata")
+save(plot_dt, file=outFile, version=2)
 
 stopifnot(!is.na(plot_dt))
 
@@ -90,4 +160,13 @@ legend("topright",
     
   }
 }
+
+load("CMP_FCC_AUC_RATIO_RANDOM/plot_dt.Rdata")
+xdt <- plot_dt[,c("hicds", "exprds", "RANDOMMIDPOSSTRICT_FCC_AUC", "PERMG2T_FCC_AUC")]
+xdt[xdt$RANDOMMIDPOSSTRICT_FCC_AUC >= 1.45,]
+# ENCSR504OTV_transverse_colon_40kb TCGAcoad_msi_mss
+xdt[xdt$PERMG2T_FCC_AUC >= 1.5 & xdt$RANDOMMIDPOSSTRICT_FCC_AUC <= 1.2,]
+# ENCSR312KHQ_SK-MEL-5_40kb TCGAskcm_wt_mutCTNNB1
+
+
 

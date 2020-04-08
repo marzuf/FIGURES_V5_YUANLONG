@@ -59,6 +59,10 @@ nSignif_dt$dataset <- paste0(nSignif_dt$hicds, "\n", nSignif_dt$exprds)
 
 nSignif_dt <- nSignif_dt[order(nSignif_dt$minNbrSample),]
 
+outFile <- file.path(outFolder, "nSignif_dt_minSample.Rdata")
+save(nSignif_dt, file = outFile, version=2)
+
+
 labcols <- all_cols[all_cmps[nSignif_dt$exprds]]
 
 maxTADs <- max(ceiling(nSignif_dt$nSignifTADs/10)*10)

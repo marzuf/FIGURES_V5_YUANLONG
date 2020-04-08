@@ -87,8 +87,8 @@ for(rd in all_rd){
         x_val <- 1:nTot
         
         
-        cumsum_obs <- cumsum(obs_fcc_sorted[1:nTot])
-        cumsum_rd <- cumsum(rd_fcc_sorted[1:nTot])
+        cumsum_obs <- cumsum(abs(obs_fcc_sorted[1:nTot])) # updated here 20.03.2020 ! should be abs !
+        cumsum_rd <- cumsum(abs(rd_fcc_sorted[1:nTot]))
         
         auc_obs <- auc(x = x_val, y = cumsum_obs)
         auc_rd <- auc(x = x_val, y = cumsum_rd)
@@ -161,7 +161,7 @@ for(rd in all_rd){
   plot(
     x = plot_dt$fcc_auc,
     y= plot_dt$rd_fcc_auc,
-    xlab = "FCC AUC ratio (observed)",
+    xlab = "FCC AUC ratio (PERMG2T)",
     ylab = paste0("FCC AUC ratio (", rd, ")"),
     main=paste0("FCC AUC ratio obs-", rd),
 	col = dotcols,
